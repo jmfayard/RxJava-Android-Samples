@@ -1,4 +1,4 @@
-package com.morihacky.android.rxjava;
+package com.morihacky.android.rxjava.fragments;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -7,31 +7,33 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.TextView;
-import butterknife.ButterKnife;
-import butterknife.InjectView;
+
+import com.jakewharton.rxbinding.widget.RxTextView;
 import com.morihacky.android.rxjava.R;
+import com.morihacky.android.rxjava.RxUtils;
+
+import butterknife.Bind;
+import butterknife.ButterKnife;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
-import rx.android.widget.OnTextChangeEvent;
-import rx.android.widget.WidgetObservable;
 import rx.functions.Func3;
 import timber.log.Timber;
 
+import static android.text.TextUtils.isEmpty;
 import static android.util.Patterns.EMAIL_ADDRESS;
-import static com.google.common.base.Strings.isNullOrEmpty;
 
 public class FormValidationCombineLatestFragment
       extends BaseFragment {
 
-    @InjectView(R.id.btn_demo_form_valid) TextView _btnValidIndicator;
-    @InjectView(R.id.demo_combl_email) EditText _email;
-    @InjectView(R.id.demo_combl_password) EditText _password;
-    @InjectView(R.id.demo_combl_num) EditText _number;
+    @Bind(R.id.btn_demo_form_valid) TextView _btnValidIndicator;
+    @Bind(R.id.demo_combl_email) EditText _email;
+    @Bind(R.id.demo_combl_password) EditText _password;
+    @Bind(R.id.demo_combl_num) EditText _number;
 
-    private Observable<OnTextChangeEvent> _emailChangeObservable;
-    private Observable<OnTextChangeEvent> _passwordChangeObservable;
-    private Observable<OnTextChangeEvent> _numberChangeObservable;
+    private Observable<CharSequence> _emailChangeObservable;
+    private Observable<CharSequence> _passwordChangeObservable;
+    private Observable<CharSequence> _numberChangeObservable;
 
     private Subscription _subscription = null;
 
@@ -42,11 +44,11 @@ public class FormValidationCombineLatestFragment
         View layout = inflater.inflate(R.layout.fragment_form_validation_comb_latest,
               container,
               false);
-        ButterKnife.inject(this, layout);
+        ButterKnife.bind(this, layout);
 
-        _emailChangeObservable = WidgetObservable.text(_email);
-        _passwordChangeObservable = WidgetObservable.text(_password);
-        _numberChangeObservable = WidgetObservable.text(_number);
+        _emailChangeObservable = RxTextView.textChanges(_email).skip(1);
+        _passwordChangeObservable = RxTextView.textChanges(_password).skip(1);
+        _numberChangeObservable = RxTextView.textChanges(_number).skip(1);
 
         _combineLatestEvents();
 
@@ -56,37 +58,39 @@ public class FormValidationCombineLatestFragment
     @Override
     public void onPause() {
         super.onPause();
-        if (_subscription != null) {
-            _subscription.unsubscribe();
-        }
+        RxUtils.unsubscribeIfNotNull(_subscription);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        ButterKnife.unbind(this);
     }
 
     private void _combineLatestEvents() {
         _subscription = Observable.combineLatest(_emailChangeObservable,
               _passwordChangeObservable,
               _numberChangeObservable,
-              new Func3<OnTextChangeEvent, OnTextChangeEvent, OnTextChangeEvent, Boolean>() {
+              new Func3<CharSequence, CharSequence, CharSequence, Boolean>() {
                   @Override
-                  public Boolean call(OnTextChangeEvent onEmailChangeEvent,
-                                      OnTextChangeEvent onPasswordChangeEvent,
-                                      OnTextChangeEvent onNumberChangeEvent) {
+                  public Boolean call(CharSequence newEmail,
+                                      CharSequence newPassword,
+                                      CharSequence newNumber) {
 
-                      boolean emailValid = !isNullOrEmpty(onEmailChangeEvent.text().toString()) &&
-                                           EMAIL_ADDRESS.matcher(onEmailChangeEvent.text())
-                                                 .matches();
+                      boolean emailValid = !isEmpty(newEmail) &&
+                                           EMAIL_ADDRESS.matcher(newEmail).matches();
                       if (!emailValid) {
                           _email.setError("Invalid Email!");
                       }
 
-                      boolean passValid = !isNullOrEmpty(onPasswordChangeEvent.text().toString()) &&
-                                          onPasswordChangeEvent.text().length() > 8;
+                      boolean passValid = !isEmpty(newPassword) && newPassword.length() > 8;
                       if (!passValid) {
                           _password.setError("Invalid Password!");
                       }
 
-                      boolean numValid = !isNullOrEmpty(onNumberChangeEvent.text().toString());
+                      boolean numValid = !isEmpty(newNumber);
                       if (numValid) {
-                          int num = Integer.parseInt(onNumberChangeEvent.text().toString());
+                          int num = Integer.parseInt(newNumber.toString());
                           numValid = num > 0 && num <= 100;
                       }
                       if (!numValid) {
@@ -105,7 +109,7 @@ public class FormValidationCombineLatestFragment
 
                   @Override
                   public void onError(Throwable e) {
-                      Timber.e(e, "there was an eroor");
+                      Timber.e(e, "there was an error");
                   }
 
                   @Override

@@ -1,4 +1,4 @@
-package com.morihacky.android.rxjava;
+package com.morihacky.android.rxjava.fragments;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -8,18 +8,21 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
-import butterknife.ButterKnife;
-import butterknife.InjectView;
-import butterknife.OnClick;
+
+import com.morihacky.android.rxjava.R;
 import com.morihacky.android.rxjava.wiring.LogAdapter;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import butterknife.Bind;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscriber;
 import rx.Subscription;
-import rx.android.app.AppObservable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 import timber.log.Timber;
@@ -27,7 +30,7 @@ import timber.log.Timber;
 public class TimeoutDemoFragment
       extends BaseFragment {
 
-    @InjectView(R.id.list_threading_log) ListView _logsList;
+    @Bind(R.id.list_threading_log) ListView _logsList;
 
     private LogAdapter _adapter;
     private List<String> _logs;
@@ -51,22 +54,20 @@ public class TimeoutDemoFragment
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View layout = inflater.inflate(R.layout.fragment_subject_timeout, container, false);
-        ButterKnife.inject(this, layout);
+        ButterKnife.bind(this, layout);
         return layout;
     }
 
     @OnClick(R.id.btn_demo_timeout_1_2s)
     public void onStart2sTask() {
-        _subscription = AppObservable.bindSupportFragment(TimeoutDemoFragment.this,
-              _getObservableTask_2sToComplete())
-              .observeOn(AndroidSchedulers.mainThread())
+        _subscription = _getObservableTask_2sToComplete()//
+              .observeOn(AndroidSchedulers.mainThread())//
               .subscribe(_getEventCompletionObserver());
     }
 
     @OnClick(R.id.btn_demo_timeout_1_5s)
     public void onStart5sTask() {
-        _subscription = AppObservable.bindSupportFragment(TimeoutDemoFragment.this,
-              _getObservableFor5sTask())
+        _subscription = _getObservableFor5sTask()//
               .timeout(2, TimeUnit.SECONDS, _getTimeoutObservable())
               .subscribeOn(Schedulers.computation())
               .observeOn(AndroidSchedulers.mainThread())
@@ -176,5 +177,4 @@ public class TimeoutDemoFragment
     private boolean _isCurrentlyOnMainThread() {
         return Looper.myLooper() == Looper.getMainLooper();
     }
-
 }

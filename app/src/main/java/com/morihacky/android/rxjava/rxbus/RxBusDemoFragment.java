@@ -6,8 +6,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import butterknife.ButterKnife;
-import com.morihacky.android.rxjava.BaseFragment;
 import com.morihacky.android.rxjava.R;
+import com.morihacky.android.rxjava.fragments.BaseFragment;
 
 public class RxBusDemoFragment
       extends BaseFragment {
@@ -17,7 +17,7 @@ public class RxBusDemoFragment
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View layout = inflater.inflate(R.layout.fragment_rxbus_demo, container, false);
-        ButterKnife.inject(this, layout);
+        ButterKnife.bind(this, layout);
         return layout;
     }
 

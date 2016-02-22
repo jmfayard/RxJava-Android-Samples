@@ -1,4 +1,4 @@
-package com.morihacky.android.rxjava;
+package com.morihacky.android.rxjava.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -11,29 +11,31 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
-import butterknife.ButterKnife;
-import butterknife.InjectView;
-import butterknife.OnClick;
+
+import com.jakewharton.rxbinding.widget.RxTextView;
+import com.jakewharton.rxbinding.widget.TextViewTextChangeEvent;
+import com.morihacky.android.rxjava.R;
+import com.morihacky.android.rxjava.RxUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import rx.Observable;
+
+import butterknife.Bind;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 import rx.Observer;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
-import rx.android.widget.OnTextChangeEvent;
-import rx.android.widget.WidgetObservable;
 import timber.log.Timber;
 
 import static java.lang.String.format;
-import static rx.android.app.AppObservable.bindFragment;
-import static rx.android.app.AppObservable.bindSupportFragment;
 
 public class DebounceSearchEmitterFragment
       extends BaseFragment {
 
-    @InjectView(R.id.list_threading_log) ListView _logsList;
-    @InjectView(R.id.input_txt_debounce) EditText _inputSearchText;
+    @Bind(R.id.list_threading_log) ListView _logsList;
+    @Bind(R.id.input_txt_debounce) EditText _inputSearchText;
 
     private LogAdapter _adapter;
     private List<String> _logs;
@@ -43,9 +45,8 @@ public class DebounceSearchEmitterFragment
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (_subscription != null) {
-            _subscription.unsubscribe();
-        }
+        RxUtils.unsubscribeIfNotNull(_subscription);
+        ButterKnife.unbind(this);
     }
 
     @Override
@@ -53,7 +54,7 @@ public class DebounceSearchEmitterFragment
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View layout = inflater.inflate(R.layout.fragment_debounce, container, false);
-        ButterKnife.inject(this, layout);
+        ButterKnife.bind(this, layout);
         return layout;
     }
 
@@ -69,20 +70,17 @@ public class DebounceSearchEmitterFragment
         super.onActivityCreated(savedInstanceState);
         _setupLogger();
 
-        Observable<OnTextChangeEvent> textChangeObservable = WidgetObservable.text(_inputSearchText);
-
-        _subscription = bindSupportFragment(this,//
-              textChangeObservable//
-                    .debounce(400, TimeUnit.MILLISECONDS)// default Scheduler is Computation
-                    .observeOn(AndroidSchedulers.mainThread()))//
+        _subscription = RxTextView.textChangeEvents(_inputSearchText)//
+              .debounce(400, TimeUnit.MILLISECONDS)// default Scheduler is Computation
+              .observeOn(AndroidSchedulers.mainThread())//
               .subscribe(_getSearchObserver());
     }
 
     // -----------------------------------------------------------------------------------
     // Main Rx entities
 
-    private Observer<OnTextChangeEvent> _getSearchObserver() {
-        return new Observer<OnTextChangeEvent>() {
+    private Observer<TextViewTextChangeEvent> _getSearchObserver() {
+        return new Observer<TextViewTextChangeEvent>() {
             @Override
             public void onCompleted() {
                 Timber.d("--------- onComplete");
@@ -95,7 +93,7 @@ public class DebounceSearchEmitterFragment
             }
 
             @Override
-            public void onNext(OnTextChangeEvent onTextChangeEvent) {
+            public void onNext(TextViewTextChangeEvent onTextChangeEvent) {
                 _log(format("Searching for %s", onTextChangeEvent.text().toString()));
             }
         };

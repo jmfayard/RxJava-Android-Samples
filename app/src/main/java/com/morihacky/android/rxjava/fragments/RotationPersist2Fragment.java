@@ -1,4 +1,4 @@
-package com.morihacky.android.rxjava;
+package com.morihacky.android.rxjava.fragments;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -8,59 +8,37 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
-import butterknife.ButterKnife;
-import butterknife.InjectView;
-import butterknife.OnClick;
+
+import com.morihacky.android.rxjava.R;
+import com.morihacky.android.rxjava.RxUtils;
 import com.morihacky.android.rxjava.wiring.LogAdapter;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import butterknife.Bind;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import rx.Observable;
 import rx.Observer;
 import rx.functions.Action0;
-import rx.observables.ConnectableObservable;
 import rx.subscriptions.CompositeSubscription;
 import timber.log.Timber;
 
 import static android.os.Looper.getMainLooper;
 
-public class RotationPersistFragment
+public class RotationPersist2Fragment
       extends BaseFragment
-      implements RotationPersistWorkerFragment.IAmYourMaster {
+      implements RotationPersist2WorkerFragment.IAmYourMaster {
 
-    public static final String FRAG_TAG = RotationPersistWorkerFragment.class.getName();
+    public static final String FRAG_TAG = RotationPersist2WorkerFragment.class.getName();
 
-    @InjectView(R.id.list_threading_log) ListView _logList;
+    @Bind(R.id.list_threading_log) ListView _logList;
 
     private LogAdapter _adapter;
     private List<String> _logs;
 
     private CompositeSubscription _subscriptions = new CompositeSubscription();
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        _subscriptions = RxUtils.getNewCompositeSubIfUnsubscribed(_subscriptions);
-    }
-
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        _setupLogger();
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater,
-                             @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
-        View layout = inflater.inflate(R.layout.fragment_rotation_persist, container, false);
-        ButterKnife.inject(this, layout);
-        return layout;
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        RxUtils.unsubscribeIfNotNull(_subscriptions);
-    }
 
     // -----------------------------------------------------------------------------------
 
@@ -70,11 +48,11 @@ public class RotationPersistFragment
         _adapter.clear();
 
         FragmentManager fm = getActivity().getSupportFragmentManager();
-        RotationPersistWorkerFragment frag =//
-              (RotationPersistWorkerFragment) fm.findFragmentByTag(FRAG_TAG);
+        RotationPersist2WorkerFragment frag =//
+              (RotationPersist2WorkerFragment) fm.findFragmentByTag(FRAG_TAG);
 
         if (frag == null) {
-            frag = new RotationPersistWorkerFragment();
+            frag = new RotationPersist2WorkerFragment();
             fm.beginTransaction().add(frag, FRAG_TAG).commit();
         } else {
             Timber.d("Worker frag already spawned");
@@ -82,10 +60,10 @@ public class RotationPersistFragment
     }
 
     @Override
-    public void observeResults(ConnectableObservable<Integer> intsObservable) {
+    public void setStream(Observable<Integer> intStream) {
 
         _subscriptions.add(//
-              intsObservable.doOnSubscribe(new Action0() {
+              intStream.doOnSubscribe(new Action0() {
                   @Override
                   public void call() {
                       _log("Subscribing to intsObservable");
@@ -107,10 +85,38 @@ public class RotationPersistFragment
                       _log(String.format("Worker frag spits out - %d", integer));
                   }
               }));
-
     }
 
     // -----------------------------------------------------------------------------------
+    // Boilerplate
+    // -----------------------------------------------------------------------------------
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        _subscriptions = RxUtils.getNewCompositeSubIfUnsubscribed(_subscriptions);
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        _setupLogger();
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater,
+                             @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+        View layout = inflater.inflate(R.layout.fragment_rotation_persist, container, false);
+        ButterKnife.bind(this, layout);
+        return layout;
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        RxUtils.unsubscribeIfNotNull(_subscriptions);
+    }
 
     private void _setupLogger() {
         _logs = new ArrayList<>();
@@ -131,5 +137,4 @@ public class RotationPersistFragment
             }
         });
     }
-
 }

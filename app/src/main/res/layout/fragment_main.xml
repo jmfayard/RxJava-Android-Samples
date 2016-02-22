@@ -93,11 +93,18 @@
             android:layout_width="match_parent"
             android:text="@string/btn_demo_exponential_backoff"
             />
+
         <Button
             android:id="@+id/btn_demo_rotation_persist"
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
             android:text="@string/btn_demo_rotation_persist"
+            />
+        <Button
+            android:id="@+id/btn_demo_volley"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:text="@string/btn_demo_volley"
             />
     </LinearLayout>
 </ScrollView>

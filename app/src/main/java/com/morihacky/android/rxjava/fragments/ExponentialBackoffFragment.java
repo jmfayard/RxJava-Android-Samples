@@ -1,4 +1,4 @@
-package com.morihacky.android.rxjava;
+package com.morihacky.android.rxjava.fragments;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -7,13 +7,18 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
-import butterknife.ButterKnife;
-import butterknife.InjectView;
-import butterknife.OnClick;
+
+import com.morihacky.android.rxjava.R;
+import com.morihacky.android.rxjava.RxUtils;
 import com.morihacky.android.rxjava.wiring.LogAdapter;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import butterknife.Bind;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 import rx.Observable;
 import rx.Observer;
 import rx.functions.Action0;
@@ -27,7 +32,7 @@ import static android.os.Looper.getMainLooper;
 public class ExponentialBackoffFragment
       extends BaseFragment {
 
-    @InjectView(R.id.list_threading_log) ListView _logList;
+    @Bind(R.id.list_threading_log) ListView _logList;
     private LogAdapter _adapter;
     private List<String> _logs;
 
@@ -50,7 +55,7 @@ public class ExponentialBackoffFragment
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View layout = inflater.inflate(R.layout.fragment_exponential_backoff, container, false);
-        ButterKnife.inject(this, layout);
+        ButterKnife.bind(this, layout);
         return layout;
     }
 
@@ -59,6 +64,12 @@ public class ExponentialBackoffFragment
         super.onPause();
 
         RxUtils.unsubscribeIfNotNull(_subscriptions);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        ButterKnife.unbind(this);
     }
 
     // -----------------------------------------------------------------------------------

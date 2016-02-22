@@ -1,26 +1,29 @@
-package com.morihacky.android.rxjava;
+package com.morihacky.android.rxjava.fragments;
 
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import com.morihacky.android.rxjava.MainActivity;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import rx.Observable;
 import rx.Subscription;
 import rx.functions.Func1;
-import rx.observables.ConnectableObservable;
+import rx.subjects.PublishSubject;
+import rx.subjects.Subject;
 
-public class RotationPersistWorkerFragment
+public class RotationPersist2WorkerFragment
       extends Fragment {
 
-    private ConnectableObservable<Integer> storedIntsObservable;
     private IAmYourMaster _masterFrag;
-    private Subscription storedIntsSubscription;
+    private Subscription _storedIntsSubscription;
+    private Subject<Integer, Integer> _intStream = PublishSubject.create();
 
     /**
-     * Hold a reference to the activity -> caller fragment
-     * this way when the worker frag kicks off
-     * we can talk back to the master and send results
+     * Since we're holding a reference to the Master a.k.a Activity/Master Frag
+     * remember to explicitly remove the worker fragment or you'll have a mem leak in your hands.
+     *
+     * See {@link MainActivity#onBackPressed()}
      */
     @Override
     public void onAttach(Activity activity) {
@@ -48,11 +51,7 @@ public class RotationPersistWorkerFragment
         // Retain this fragment across configuration changes.
         setRetainInstance(true);
 
-        if (storedIntsObservable != null) {
-            return;
-        }
-
-        Observable<Integer> intsObservable =//
+        _storedIntsSubscription =//
               Observable.interval(1, TimeUnit.SECONDS)//
                     .map(new Func1<Long, Integer>() {
                         @Override
@@ -60,20 +59,8 @@ public class RotationPersistWorkerFragment
                             return aLong.intValue();
                         }
                     })//
-                    .take(20);
-
-        // -----------------------------------------------------------------------------------
-        // Making our observable "HOT" for the purpose of the demo.
-
-        //_intsObservable = _intsObservable.share();
-        storedIntsObservable = intsObservable.replay();
-
-        storedIntsSubscription = storedIntsObservable.connect();
-
-        // Do not do this in production!
-        // `.share` is "warm" not "hot"
-        // the below forceful subscription fakes the heat
-        //_intsObservable.subscribe();
+                    .take(20)//
+                    .subscribe(_intStream);
     }
 
     /**
@@ -82,7 +69,7 @@ public class RotationPersistWorkerFragment
     @Override
     public void onResume() {
         super.onResume();
-        _masterFrag.observeResults(storedIntsObservable);
+        _masterFrag.setStream(_intStream.asObservable());
     }
 
     /**
@@ -95,12 +82,13 @@ public class RotationPersistWorkerFragment
         _masterFrag = null;
     }
 
-    @Override public void onDestroy() {
+    @Override
+    public void onDestroy() {
         super.onDestroy();
-        storedIntsSubscription.unsubscribe();
+        _storedIntsSubscription.unsubscribe();
     }
 
     public interface IAmYourMaster {
-        void observeResults(ConnectableObservable<Integer> intsObservable);
+        void setStream(Observable<Integer> intStream);
     }
 }

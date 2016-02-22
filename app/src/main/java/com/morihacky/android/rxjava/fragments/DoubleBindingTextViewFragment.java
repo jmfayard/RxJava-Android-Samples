@@ -1,4 +1,4 @@
-package com.morihacky.android.rxjava;
+package com.morihacky.android.rxjava.fragments;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -7,21 +7,25 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.TextView;
-import butterknife.ButterKnife;
-import butterknife.InjectView;
-import butterknife.OnTextChanged;
-import com.google.common.base.Strings;
+
 import com.morihacky.android.rxjava.R;
+import com.morihacky.android.rxjava.RxUtils;
+
+import butterknife.Bind;
+import butterknife.ButterKnife;
+import butterknife.OnTextChanged;
 import rx.Subscription;
 import rx.functions.Action1;
 import rx.subjects.PublishSubject;
 
+import static android.text.TextUtils.isEmpty;
+
 public class DoubleBindingTextViewFragment
       extends BaseFragment {
 
-    @InjectView(R.id.double_binding_num1) EditText _number1;
-    @InjectView(R.id.double_binding_num2) EditText _number2;
-    @InjectView(R.id.double_binding_result) TextView _result;
+    @Bind(R.id.double_binding_num1) EditText _number1;
+    @Bind(R.id.double_binding_num2) EditText _number2;
+    @Bind(R.id.double_binding_result) TextView _result;
 
     Subscription _subscription;
     PublishSubject<Float> _resultEmitterSubject;
@@ -31,7 +35,7 @@ public class DoubleBindingTextViewFragment
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View layout = inflater.inflate(R.layout.fragment_double_binding_textview, container, false);
-        ButterKnife.inject(this, layout);
+        ButterKnife.bind(this, layout);
 
         _resultEmitterSubject = PublishSubject.create();
         _subscription = _resultEmitterSubject.asObservable().subscribe(new Action1<Float>() {
@@ -52,11 +56,11 @@ public class DoubleBindingTextViewFragment
         float num1 = 0;
         float num2 = 0;
 
-        if (!Strings.isNullOrEmpty(_number1.getText().toString())) {
+        if (!isEmpty(_number1.getText().toString())) {
             num1 = Float.parseFloat(_number1.getText().toString());
         }
 
-        if (!Strings.isNullOrEmpty(_number2.getText().toString())) {
+        if (!isEmpty(_number2.getText().toString())) {
             num2 = Float.parseFloat(_number2.getText().toString());
         }
 
@@ -66,8 +70,7 @@ public class DoubleBindingTextViewFragment
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        if (_subscription != null) {
-            _subscription.unsubscribe();
-        }
+        RxUtils.unsubscribeIfNotNull(_subscription);
+        ButterKnife.unbind(this);
     }
 }

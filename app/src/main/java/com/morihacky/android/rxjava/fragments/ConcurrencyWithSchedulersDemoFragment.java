@@ -1,4 +1,4 @@
-package com.morihacky.android.rxjava;
+package com.morihacky.android.rxjava.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -11,15 +11,19 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import butterknife.ButterKnife;
-import butterknife.InjectView;
-import butterknife.OnClick;
+
+import com.morihacky.android.rxjava.R;
+import com.morihacky.android.rxjava.RxUtils;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import butterknife.Bind;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
-import rx.android.app.AppObservable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
@@ -28,8 +32,8 @@ import timber.log.Timber;
 public class ConcurrencyWithSchedulersDemoFragment
       extends BaseFragment {
 
-    @InjectView(R.id.progress_operation_running) ProgressBar _progress;
-    @InjectView(R.id.list_threading_log) ListView _logsList;
+    @Bind(R.id.progress_operation_running) ProgressBar _progress;
+    @Bind(R.id.list_threading_log) ListView _logsList;
 
     private LogAdapter _adapter;
     private List<String> _logs;
@@ -38,9 +42,8 @@ public class ConcurrencyWithSchedulersDemoFragment
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (_subscription != null) {
-            _subscription.unsubscribe();
-        }
+        RxUtils.unsubscribeIfNotNull(_subscription);
+        ButterKnife.unbind(this);
     }
 
     @Override
@@ -54,7 +57,7 @@ public class ConcurrencyWithSchedulersDemoFragment
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View layout = inflater.inflate(R.layout.fragment_concurrency_schedulers, container, false);
-        ButterKnife.inject(this, layout);
+        ButterKnife.bind(this, layout);
         return layout;
     }
 
@@ -64,7 +67,7 @@ public class ConcurrencyWithSchedulersDemoFragment
         _progress.setVisibility(View.VISIBLE);
         _log("Button Clicked");
 
-        _subscription = AppObservable.bindSupportFragment(this, _getObservable())      // Observable
+        _subscription = _getObservable()//
               .subscribeOn(Schedulers.io())
               .observeOn(AndroidSchedulers.mainThread())
               .subscribe(_getObserver());                             // Observer
