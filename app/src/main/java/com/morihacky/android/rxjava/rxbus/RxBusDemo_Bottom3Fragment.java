@@ -7,104 +7,93 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import com.morihacky.android.rxjava.MainActivity;
 import com.morihacky.android.rxjava.R;
 import com.morihacky.android.rxjava.fragments.BaseFragment;
-
-import java.util.List;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.flowables.ConnectableFlowable;
 import java.util.concurrent.TimeUnit;
 
-import butterknife.Bind;
-import butterknife.ButterKnife;
-import rx.Observable;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
-import rx.functions.Func1;
-import rx.observables.ConnectableObservable;
-import rx.subscriptions.CompositeSubscription;
+public class RxBusDemo_Bottom3Fragment extends BaseFragment {
 
-public class RxBusDemo_Bottom3Fragment
-      extends BaseFragment {
+  @BindView(R.id.demo_rxbus_tap_txt)
+  TextView _tapEventTxtShow;
 
-    @Bind(R.id.demo_rxbus_tap_txt) TextView _tapEventTxtShow;
-    @Bind(R.id.demo_rxbus_tap_count) TextView _tapEventCountShow;
-    private RxBus _rxBus;
-    private CompositeSubscription _subscriptions;
+  @BindView(R.id.demo_rxbus_tap_count)
+  TextView _tapEventCountShow;
 
-    @Override
-    public View onCreateView(LayoutInflater inflater,
-                             @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
-        View layout = inflater.inflate(R.layout.fragment_rxbus_bottom, container, false);
-        ButterKnife.bind(this, layout);
-        return layout;
-    }
+  private RxBus _rxBus;
+  private CompositeDisposable _disposables;
 
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        _rxBus = ((MainActivity) getActivity()).getRxBusSingleton();
-    }
+  @Override
+  public View onCreateView(
+      LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    View layout = inflater.inflate(R.layout.fragment_rxbus_bottom, container, false);
+    ButterKnife.bind(this, layout);
+    return layout;
+  }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        _subscriptions = new CompositeSubscription();
+  @Override
+  public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+    super.onActivityCreated(savedInstanceState);
+    _rxBus = ((MainActivity) getActivity()).getRxBusSingleton();
+  }
 
-        ConnectableObservable<Object> tapEventEmitter = _rxBus.toObserverable().publish();
+  @Override
+  public void onStart() {
+    super.onStart();
+    _disposables = new CompositeDisposable();
 
-        _subscriptions//
-              .add(tapEventEmitter.subscribe(new Action1<Object>() {
-                  @Override
-                  public void call(Object event) {
-                      if (event instanceof RxBusDemoFragment.TapEvent) {
-                          _showTapText();
-                      }
-                  }
-              }));
+    ConnectableFlowable<Object> tapEventEmitter = _rxBus.asFlowable().publish();
 
-        _subscriptions//
-              .add(tapEventEmitter.publish(new Func1<Observable<Object>, Observable<List<Object>>>() {
-                  @Override
-                  public Observable<List<Object>> call(Observable<Object> stream) {
-                      return stream.buffer(stream.debounce(1, TimeUnit.SECONDS));
-                  }
-              }).observeOn(AndroidSchedulers.mainThread()).subscribe(new Action1<List<Object>>() {
-                  @Override
-                  public void call(List<Object> taps) {
-                      _showTapCount(taps.size());
-                  }
-              }));
+    _disposables //
+        .add(
+        tapEventEmitter.subscribe(
+            event -> {
+              if (event instanceof RxBusDemoFragment.TapEvent) {
+                _showTapText();
+              }
+            }));
 
-        _subscriptions.add(tapEventEmitter.connect());
+    _disposables.add(
+        tapEventEmitter
+            .publish(stream -> stream.buffer(stream.debounce(1, TimeUnit.SECONDS)))
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                taps -> {
+                  _showTapCount(taps.size());
+                }));
 
-    }
+    _disposables.add(tapEventEmitter.connect());
+  }
 
-    @Override
-    public void onStop() {
-        super.onStop();
-        _subscriptions.clear();
-    }
+  @Override
+  public void onStop() {
+    super.onStop();
+    _disposables.clear();
+  }
 
-    // -----------------------------------------------------------------------------------
-    // Helper to show the text via an animation
+  // -----------------------------------------------------------------------------------
+  // Helper to show the text via an animation
 
-    private void _showTapText() {
-        _tapEventTxtShow.setVisibility(View.VISIBLE);
-        _tapEventTxtShow.setAlpha(1f);
-        ViewCompat.animate(_tapEventTxtShow).alphaBy(-1f).setDuration(400);
-    }
+  private void _showTapText() {
+    _tapEventTxtShow.setVisibility(View.VISIBLE);
+    _tapEventTxtShow.setAlpha(1f);
+    ViewCompat.animate(_tapEventTxtShow).alphaBy(-1f).setDuration(400);
+  }
 
-    private void _showTapCount(int size) {
-        _tapEventCountShow.setText(String.valueOf(size));
-        _tapEventCountShow.setVisibility(View.VISIBLE);
-        _tapEventCountShow.setScaleX(1f);
-        _tapEventCountShow.setScaleY(1f);
-        ViewCompat.animate(_tapEventCountShow)
-              .scaleXBy(-1f)
-              .scaleYBy(-1f)
-              .setDuration(800)
-              .setStartDelay(100);
-    }
+  private void _showTapCount(int size) {
+    _tapEventCountShow.setText(String.valueOf(size));
+    _tapEventCountShow.setVisibility(View.VISIBLE);
+    _tapEventCountShow.setScaleX(1f);
+    _tapEventCountShow.setScaleY(1f);
+    ViewCompat.animate(_tapEventCountShow)
+        .scaleXBy(-1f)
+        .scaleYBy(-1f)
+        .setDuration(800)
+        .setStartDelay(100);
+  }
 }

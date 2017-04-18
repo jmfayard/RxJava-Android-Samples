@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <LinearLayout
     android:orientation="vertical"
     android:layout_height="match_parent"
@@ -25,7 +24,6 @@
                 android:gravity="left"
                 android:text="@string/msg_demo_timing"
                 android:layout_span="2"
-
                 />
         </TableRow>
 
@@ -39,7 +37,7 @@
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
-                android:text="BTN 1"
+                android:text="@string/btn_1"
                 />
 
             <Button
@@ -47,7 +45,7 @@
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
-                android:text="BTN 2"
+                android:text="@string/btn_2"
                 />
         </TableRow>
 
@@ -61,7 +59,7 @@
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
-                android:text="BTN 3"
+                android:text="@string/btn_3"
                 />
 
             <Button
@@ -69,7 +67,30 @@
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
-                android:text="BTN 4"
+                android:text="@string/btn_4"
+                />
+        </TableRow>
+
+        <TableRow
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            >
+
+            <Button
+                android:id="@+id/btn_demo_timing_5"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="@string/btn_5"
+                />
+
+            <Button
+                android:id="@+id/btn_clr"
+                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="@string/clear_log"
                 />
         </TableRow>
     </TableLayout>
@@ -86,13 +107,6 @@
             android:layout_weight="1"
             android:layout_height="match_parent"
             android:layout_width="0dp"
-            />
-
-        <ImageButton
-            android:id="@+id/btn_clr"
-            android:src="@android:drawable/ic_menu_close_clear_cancel"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
             />
     </LinearLayout>
 

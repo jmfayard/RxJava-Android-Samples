@@ -1,4 +1,4 @@
-<ScrollView
+<?xml version="1.0" encoding="utf-8"?><ScrollView
     android:layout_height="match_parent"
     android:layout_width="match_parent"
     xmlns:android="http://schemas.android.com/apk/res/android"
@@ -52,12 +52,11 @@
             android:text="@string/btn_demo_double_binding_textview"
             />
 
-        <!--<Button
+        <Button
             android:id="@+id/btn_demo_polling"
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
-            android:text="@string/btn_demo_polling"
-            />-->
+            android:text="@string/btn_demo_polling" />
 
         <Button
             android:id="@+id/btn_demo_rxbus"
@@ -88,6 +87,13 @@
             />
 
         <Button
+            android:id="@+id/btn_demo_timeout"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:text="@string/btn_demo_timeout"
+            />
+
+        <Button
             android:id="@+id/btn_demo_exponential_backoff"
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
@@ -100,11 +106,26 @@
             android:layout_width="match_parent"
             android:text="@string/btn_demo_rotation_persist"
             />
+
         <Button
             android:id="@+id/btn_demo_volley"
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
             android:text="@string/btn_demo_volley"
+            />
+
+        <Button
+            android:id="@+id/btn_demo_pagination"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:text="@string/btn_demo_pagination"
+            />
+
+        <Button
+            android:id="@+id/btn_demo_networkDetector"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:text="@string/btn_demo_networkDetector"
             />
     </LinearLayout>
 </ScrollView>
